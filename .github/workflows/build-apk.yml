@@ -37,6 +37,7 @@ jobs:
 
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36.1" || \
+            sdkmanager --channel=1 "platform-tools" "build-tools;36.0.0" "platforms;android-36.1" || \
             sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36"
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
 
@@ -68,7 +69,8 @@ jobs:
         run: >
           gradle assembleDebug
           --no-daemon
-          --stacktrace
+          --no-configuration-cache
+          --console=plain
           -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=768m -Dfile.encoding=UTF-8"
 
       - name: Upload APK artifact
