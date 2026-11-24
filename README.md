@@ -21,8 +21,9 @@ Every push to `main` (or manual run) triggers the **Build Debug APK** GitHub Act
 3. Open the latest completed run and scroll down to **Artifacts**.
 4. Download **daily-lucky-draw-debug-apk** (contains `app-debug.apk`).
 
-### Optional Admin Email Secret
+### Optional GitHub Secrets
 
-To override the default admin email during GitHub Actions builds, add a repository secret in **Settings → Secrets and variables → Actions**:
+To configure Firebase and Admin access during GitHub Actions builds (**Settings → Secrets and variables → Actions**):
 
+- `GOOGLE_SERVICES_JSON_BASE64` — Base64-encoded `app/google-services.json` (required if `app/google-services.json` is omitted when pushing to GitHub, so Google Sign-In and Firestore work in the downloaded APK)
 - `ADMIN_EMAIL` — Google account email granted admin controls
