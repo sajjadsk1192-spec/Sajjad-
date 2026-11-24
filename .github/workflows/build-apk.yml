@@ -21,19 +21,34 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools build-tools;36.0.0'
+          packages: 'platform-tools'
 
       - name: Install Android 36 SDK platform and accept licenses
+        shell: bash
         run: |
-          SDK_DIR="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          set +o pipefail
+          SDK_DIR="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          export ANDROID_HOME="$SDK_DIR"
+          export ANDROID_SDK_ROOT="$SDK_DIR"
+          export PATH="$SDK_DIR/cmdline-tools/latest/bin:$SDK_DIR/platform-tools:$PATH"
+          echo "ANDROID_HOME=$SDK_DIR" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_DIR" >> "$GITHUB_ENV"
           echo "sdk.dir=$SDK_DIR" > local.properties
-          (yes || true) | sdkmanager --licenses >/dev/null 2>&1 || true
+
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36.1" || \
             sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36"
-          (yes || true) | sdkmanager --licenses >/dev/null 2>&1 || true
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
 
-      - name: Decode debug keystore
-        run: base64 -d debug.keystore.base64 > debug.keystore
+      - name: Prepare debug keystore
+        run: |
+          if [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          else
+            keytool -genkeypair -v -keystore debug.keystore -storepass android \
+              -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+              -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
 
       - name: Create temporary .env from GitHub Secrets (if configured)
         env:
@@ -44,9 +59,10 @@ jobs:
           fi
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '9.3.1'
+          cache-provider: basic
 
       - name: Build Debug APK
         run: >
