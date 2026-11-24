@@ -1,0 +1,6 @@
+{
+  "name": "Daily Lucky Draw",
+  "description": "Daily Lucky Draw app featuring coin balance, real-money prize values, 7 AM to 7 PM daily draw timer, coin-only deposits, and demo winner draws.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

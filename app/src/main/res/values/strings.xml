@@ -1,0 +1,87 @@
+<resources>
+    <string name="app_name">Daily Lucky Draw</string>
+    <string name="tagline_daily_window">7:00 AM – 7:00 PM Daily Draw</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_buy_coins">Buy Coins</string>
+    <string name="nav_results">Results</string>
+    <string name="nav_admin">Admin</string>
+
+    <!-- Authentication Screen -->
+    <string name="signup_badge">DAILY JACKPOT CLUB</string>
+    <string name="auth_title">Sign In to Your Wallet</string>
+    <string name="auth_subtitle" formatted="false">Sign in with your Google account to sync your personal coin balance, draw tickets, and receipts across sessions. Winners keep 75% of the prize; 25% goes to the house.</string>
+    <string name="auth_google_cta">Sign in with Google</string>
+    <string name="auth_signing_in">Signing in…</string>
+    <string name="auth_feature_wallet">Personal coin balance synced in real time</string>
+    <string name="auth_feature_bonus">100 welcome coins on first sign-in</string>
+    <string name="signup_rate_note" formatted="false">75% Winner • 25% House</string>
+
+    <!-- Home Screen -->
+    <string name="home_welcome_back">Welcome back,</string>
+    <string name="home_balance_label">COIN BALANCE</string>
+    <string name="home_cash_value_label">Est. Real Money Value</string>
+    <string name="home_buy_coins">Buy Coins</string>
+    <string name="home_buy_coins_note">Instant credit after payment</string>
+    <string name="home_draw_timer_title">Daily Draw Window</string>
+    <string name="home_draw_window_hours">7:00 AM – 7:00 PM</string>
+    <string name="home_draw_live_badge">DRAW OPEN</string>
+    <string name="home_draw_closed_badge">NEXT WINDOW</string>
+    <string name="home_time_remaining_close">Time left before 7:00 PM draw</string>
+    <string name="home_time_remaining_open">Opens at 7:00 AM</string>
+    <string name="home_enter_draw_cta">Enter Draw (50 Coins)</string>
+    <string name="home_entered_today">Entered Today • Ticket #%1$s</string>
+    <string name="home_jackpot_pool_label">Prize Pool</string>
+    <string name="home_activity_title">Coin Activity</string>
+    <string name="home_activity_empty">No coin activity yet. Buy coins or enter today\'s draw!</string>
+    <string name="home_switch_account">Sign Out</string>
+
+    <!-- Payment / Buy Coins Screen -->
+    <string name="payment_title">Buy Coins</string>
+    <string name="payment_test_badge">TEST CHECKOUT</string>
+    <string name="payment_subtitle">Choose a coin pack and complete payment to credit coins to your wallet.</string>
+    <string name="payment_select_pack">1. Select Coin Pack</string>
+    <string name="payment_select_method">2. Payment Method</string>
+    <string name="payment_method_gpay">Google Pay</string>
+    <string name="payment_method_easypaisa">Easypaisa</string>
+    <string name="payment_method_card">Debit / Credit Card</string>
+    <string name="payment_easypaisa_label">Easypaisa Mobile Number</string>
+    <string name="payment_easypaisa_placeholder">0300 1234567</string>
+    <string name="payment_card_number_label">Card Number (Test Only)</string>
+    <string name="payment_card_expiry_label">MM/YY</string>
+    <string name="payment_card_cvv_label">CVV</string>
+    <string name="payment_pay_cta">Pay %1$s &amp; Get %2$s Coins</string>
+    <string name="payment_processing">Authorizing payment…</string>
+    <string name="payment_receipt_title">Payment Confirmed</string>
+    <string name="payment_receipt_subtitle">Your payment succeeded and your coins have been credited.</string>
+    <string name="payment_receipt_done">Back to Wallet</string>
+    <string name="payment_history_title">Payment Receipts</string>
+    <string name="payment_history_empty">No coin purchases yet. Completed payments appear here.</string>
+    <string name="payment_sandbox_notice">Simulated test checkout — card and account details are never stored; only masked receipt info is saved locally.</string>
+
+    <!-- Results Screen -->
+    <string name="results_title">Draw Results</string>
+    <string name="results_admin_badge">ADMIN CONTROL</string>
+    <string name="results_player_badge" formatted="false">75% / 25% SPLIT</string>
+    <string name="results_hero_title">Daily Lucky Winner</string>
+    <string name="results_hero_subtitle_admin" formatted="false">Only you (Admin) can run the draw. Winner receives 75%; 25% goes to the house.</string>
+    <string name="results_hero_subtitle_player" formatted="false">Draws are conducted exclusively by the Admin. Winners get 75% of the prize; 25% goes to the house.</string>
+    <string name="results_player_locked_note">Admin-only action: Players cannot trigger draws.</string>
+    <string name="results_draw_winner_cta">Draw Winner</string>
+    <string name="results_drawing_cta">Drawing…</string>
+    <string name="results_latest_winner_label" formatted="false">LATEST WINNER (75% PAYOUT)</string>
+    <string name="results_history_title">Past Draw Winners</string>
+    <string name="results_history_empty">No draws completed yet.</string>
+    <string name="results_you_won_banner" formatted="false">You won! 75% prize payout added to your wallet.</string>
+
+    <!-- Admin Control Center -->
+    <string name="admin_panel_title">Admin Control Center</string>
+    <string name="admin_house_label" formatted="false">HOUSE TREASURY (25% SHARE)</string>
+    <string name="admin_stats_title">User Statistics Overview</string>
+    <string name="admin_manual_draw_title">Manual Winner Selection</string>
+    <string name="admin_manual_draw_subtitle" formatted="false">Trigger a random draw across eligible players or select a specific winner manually. Winner gets 75%; 25% goes to the house.</string>
+    <string name="admin_prize_pool_title">Draw Prize Pool Control</string>
+    <string name="admin_players_title">Player Statistics (%1$d)</string>
+    <string name="admin_players_empty">No players have signed up yet.</string>
+</resources>

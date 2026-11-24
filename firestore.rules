@@ -1,0 +1,221 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email_verified == true &&
+         request.auth.token.email == 'sajjad.khansk1192@gmail.com') ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // --- Entity Validation Helpers ---
+    function isValidUserProfile(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+             data.email is string && data.email.size() <= 160 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+             data.coinBalance is int && data.coinBalance >= 0 && data.coinBalance <= 100000000 &&
+             (!('todayTicketNumber' in data) || (data.todayTicketNumber is string && data.todayTicketNumber.size() >= 1 && data.todayTicketNumber.size() <= 24)) &&
+             (!('lastTicketDate' in data) || (data.lastTicketDate is string && data.lastTicketDate.size() >= 1 && data.lastTicketDate.size() <= 20)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidTransaction(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+             data.coinDelta is int && data.coinDelta >= -10000000 && data.coinDelta <= 10000000 &&
+             data.type in ['WELCOME', 'COIN_PURCHASE', 'DRAW_ENTRY', 'PRIZE_WIN'] &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidPaymentOrder(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.packageName is string && data.packageName.size() >= 1 && data.packageName.size() <= 60 &&
+             data.coinsPurchased is int && data.coinsPurchased > 0 && data.coinsPurchased <= 10000000 &&
+             data.amountCents is int && data.amountCents > 0 && data.amountCents <= 100000000 &&
+             data.paymentMethod in ['GOOGLE_PAY', 'EASYPAISA', 'CARD'] &&
+             data.maskedAccount is string && data.maskedAccount.size() >= 1 && data.maskedAccount.size() <= 80 &&
+             data.status in ['PROCESSING', 'PAID', 'FAILED'] &&
+             (!('receiptReference' in data) || (data.receiptReference is string && data.receiptReference.size() >= 1 && data.receiptReference.size() <= 64)) &&
+             (!('paidAtMillis' in data) || (data.paidAtMillis is int && data.paidAtMillis > 0)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidDrawResult(data) {
+      return (!('winnerUserId' in data) || (data.winnerUserId is string && data.winnerUserId.size() >= 1 && data.winnerUserId.size() <= 128)) &&
+             data.winnerName is string && data.winnerName.size() >= 1 && data.winnerName.size() <= 80 &&
+             data.winnerPhoneMasked is string && data.winnerPhoneMasked.size() >= 1 && data.winnerPhoneMasked.size() <= 60 &&
+             data.ticketCode is string && data.ticketCode.size() >= 1 && data.ticketCode.size() <= 24 &&
+             data.grossPrizeCoins is int && data.grossPrizeCoins >= 100 && data.grossPrizeCoins <= 1000000 &&
+             data.prizeCoins is int && data.prizeCoins >= 0 && data.prizeCoins <= data.grossPrizeCoins &&
+             data.houseCutCoins is int && data.houseCutCoins >= 0 && data.houseCutCoins <= data.grossPrizeCoins &&
+             data.prizeCoins + data.houseCutCoins == data.grossPrizeCoins &&
+             data.prizeUsdFormatted is string && data.prizeUsdFormatted.size() >= 1 && data.prizeUsdFormatted.size() <= 32 &&
+             data.visibility == 'PUBLIC' &&
+             data.drawnAtMillis is int && data.drawnAtMillis > 0 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidAppConfig(data) {
+      return data.configuredDrawPrizeCoins is int && data.configuredDrawPrizeCoins >= 100 && data.configuredDrawPrizeCoins <= 1000000 &&
+             data.houseBalanceCoins is int && data.houseBalanceCoins >= 0 && data.houseBalanceCoins <= 1000000000 &&
+             data.houseDrawsCount is int && data.houseDrawsCount >= 0 && data.houseDrawsCount <= 10000000 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    // --- Collection Rules ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && isAdmin();
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isOwner(userId) &&
+                       incoming().keys().hasAll(['userId', 'name', 'email', 'coinBalance', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'name', 'email', 'phone', 'coinBalance', 'todayTicketNumber', 'lastTicketDate', 'createdAt', 'updatedAt']) &&
+                       incoming().coinBalance == 100 &&
+                       isValidUserProfile(incoming(), userId);
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt && (
+                         (isAdmin() &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['coinBalance', 'updatedAt']) &&
+                          incoming().coinBalance >= existing().coinBalance) ||
+                         (isOwner(userId) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'updatedAt'])) ||
+                         (isOwner(userId) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['coinBalance', 'todayTicketNumber', 'lastTicketDate', 'updatedAt']) &&
+                          incoming().coinBalance == existing().coinBalance - 50) ||
+                         (isOwner(userId) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['coinBalance', 'updatedAt']) &&
+                          incoming().coinBalance > existing().coinBalance &&
+                          incoming().coinBalance <= existing().coinBalance + 3100)
+                       );
+
+      allow delete: if false;
+
+      match /transactions/{txId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(txId) && (isOwner(userId) || isAdmin());
+        allow list: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+
+        allow create: if isSignedIn() &&
+                         isValidId(userId) &&
+                         isValidId(txId) &&
+                         incoming().keys().hasAll(['userId', 'title', 'coinDelta', 'type', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'title', 'coinDelta', 'type', 'createdAt']) &&
+                         isValidTransaction(incoming(), userId) &&
+                         existsAfter(/databases/$(database)/documents/users/$(userId)) && (
+                           (isOwner(userId) && incoming().type in ['WELCOME', 'COIN_PURCHASE', 'DRAW_ENTRY']) ||
+                           (isAdmin() && incoming().type == 'PRIZE_WIN')
+                         );
+
+        allow update, delete: if false;
+      }
+    }
+
+    match /payment_orders/{orderId} {
+      allow get: if isSignedIn() && isValidId(orderId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(orderId) &&
+                       isOwner(incoming().userId) &&
+                       incoming().status == 'PROCESSING' &&
+                       incoming().keys().hasAll(['userId', 'packageName', 'coinsPurchased', 'amountCents', 'paymentMethod', 'maskedAccount', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'packageName', 'coinsPurchased', 'amountCents', 'paymentMethod', 'maskedAccount', 'status', 'receiptReference', 'paidAtMillis', 'createdAt', 'updatedAt']) &&
+                       isValidPaymentOrder(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(orderId) &&
+                       isValidPaymentOrder(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().status in ['PAID', 'FAILED'] &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'receiptReference', 'paidAtMillis', 'updatedAt']) && (
+                         (isOwner(existing().userId) && existing().status == 'PROCESSING') ||
+                         isAdmin()
+                       );
+
+      allow delete: if false;
+    }
+
+    match /draws/{drawId} {
+      allow get: if isSignedIn() && isValidId(drawId) && existing().visibility == 'PUBLIC';
+      allow list: if isSignedIn() && existing().visibility == 'PUBLIC';
+
+      allow create: if isSignedIn() &&
+                       isValidId(drawId) &&
+                       incoming().keys().hasAll(['winnerName', 'winnerPhoneMasked', 'ticketCode', 'grossPrizeCoins', 'prizeCoins', 'houseCutCoins', 'prizeUsdFormatted', 'visibility', 'drawnAtMillis', 'createdAt']) &&
+                       incoming().keys().hasOnly(['winnerUserId', 'winnerName', 'winnerPhoneMasked', 'ticketCode', 'grossPrizeCoins', 'prizeCoins', 'houseCutCoins', 'prizeUsdFormatted', 'visibility', 'drawnAtMillis', 'createdAt']) &&
+                       isValidDrawResult(incoming()) &&
+                       isAdmin();
+
+      allow update, delete: if false;
+    }
+
+    match /app_state/{docId} {
+      allow get: if isSignedIn() && docId == 'config';
+      allow list: if false;
+
+      allow create: if isSignedIn() &&
+                       docId == 'config' &&
+                       incoming().keys().hasAll(['configuredDrawPrizeCoins', 'houseBalanceCoins', 'houseDrawsCount', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['configuredDrawPrizeCoins', 'houseBalanceCoins', 'houseDrawsCount', 'createdAt', 'updatedAt']) &&
+                       isValidAppConfig(incoming()) &&
+                       isAdmin();
+
+      allow update: if isSignedIn() &&
+                       docId == 'config' &&
+                       isValidAppConfig(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['configuredDrawPrizeCoins', 'houseBalanceCoins', 'houseDrawsCount', 'updatedAt']) &&
+                       isAdmin();
+
+      allow delete: if false;
+    }
+
+    match /admins/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && isOwner(userId);
+      allow list, create, update, delete: if false;
+    }
+  }
+}

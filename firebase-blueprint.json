@@ -1,0 +1,306 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user wallet profile, coin balance, and daily draw ticket status.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the account owner."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Verified account email from Firebase Auth."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Optional phone number for masked draw winner announcements."
+        },
+        "coinBalance": {
+          "type": "integer",
+          "description": "Current coin balance owned by the user."
+        },
+        "todayTicketNumber": {
+          "type": "string",
+          "description": "Ticket code issued for the current draw day, if entered."
+        },
+        "lastTicketDate": {
+          "type": "string",
+          "description": "Date key (yyyy-MM-dd) of the most recent daily draw entry."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "email",
+        "coinBalance",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CoinTransaction": {
+      "title": "CoinTransaction",
+      "description": "Append-only coin wallet ledger entry for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable description of the coin transaction."
+        },
+        "coinDelta": {
+          "type": "integer",
+          "description": "Signed coin balance change."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["WELCOME", "COIN_PURCHASE", "DRAW_ENTRY", "PRIZE_WIN"],
+          "description": "Transaction category."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of transaction creation (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "coinDelta",
+        "type",
+        "createdAt"
+      ]
+    },
+    "PaymentOrder": {
+      "title": "PaymentOrder",
+      "description": "Coin package purchase order and masked receipt record.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "packageName": {
+          "type": "string",
+          "description": "Purchased coin package title."
+        },
+        "coinsPurchased": {
+          "type": "integer",
+          "description": "Total coins credited upon settlement."
+        },
+        "amountCents": {
+          "type": "integer",
+          "description": "Package price in USD cents."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["GOOGLE_PAY", "EASYPAISA", "CARD"],
+          "description": "Payment method selected at checkout."
+        },
+        "maskedAccount": {
+          "type": "string",
+          "description": "Masked account label for receipt history."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PROCESSING", "PAID", "FAILED"],
+          "description": "Order settlement status."
+        },
+        "receiptReference": {
+          "type": "string",
+          "description": "Generated receipt reference once settled."
+        },
+        "paidAtMillis": {
+          "type": "integer",
+          "description": "Epoch millis when order settled."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when order was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when order was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "packageName",
+        "coinsPurchased",
+        "amountCents",
+        "paymentMethod",
+        "maskedAccount",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DrawResult": {
+      "title": "DrawResult",
+      "description": "Immutable public record of a completed daily draw and 75%/25% split.",
+      "type": "object",
+      "properties": {
+        "winnerUserId": {
+          "type": "string",
+          "description": "Optional UID of winning registered user."
+        },
+        "winnerName": {
+          "type": "string",
+          "description": "Winner display name."
+        },
+        "winnerPhoneMasked": {
+          "type": "string",
+          "description": "Masked contact label."
+        },
+        "ticketCode": {
+          "type": "string",
+          "description": "Winning draw ticket code."
+        },
+        "grossPrizeCoins": {
+          "type": "integer",
+          "description": "Total configured prize pool in coins."
+        },
+        "prizeCoins": {
+          "type": "integer",
+          "description": "75% winner payout in coins."
+        },
+        "houseCutCoins": {
+          "type": "integer",
+          "description": "25% house share in coins."
+        },
+        "prizeUsdFormatted": {
+          "type": "string",
+          "description": "Formatted USD value of the winner payout."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["PUBLIC"],
+          "description": "Explicit visibility marker for authenticated public listing."
+        },
+        "drawnAtMillis": {
+          "type": "integer",
+          "description": "Epoch millis when draw executed."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when draw result was written (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "winnerName",
+        "winnerPhoneMasked",
+        "ticketCode",
+        "grossPrizeCoins",
+        "prizeCoins",
+        "houseCutCoins",
+        "prizeUsdFormatted",
+        "visibility",
+        "drawnAtMillis",
+        "createdAt"
+      ]
+    },
+    "AppConfig": {
+      "title": "AppConfig",
+      "description": "Global draw prize pool configuration and house treasury totals.",
+      "type": "object",
+      "properties": {
+        "configuredDrawPrizeCoins": {
+          "type": "integer",
+          "description": "Configured gross prize pool in coins."
+        },
+        "houseBalanceCoins": {
+          "type": "integer",
+          "description": "Accumulated 25% house share in coins."
+        },
+        "houseDrawsCount": {
+          "type": "integer",
+          "description": "Total completed draws."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when config was initialized (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when config was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "configuredDrawPrizeCoins",
+        "houseBalanceCoins",
+        "houseDrawsCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminRole": {
+      "title": "AdminRole",
+      "description": "Read-only admin membership marker document.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Admin UID."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin membership was granted."
+        }
+      },
+      "required": [
+        "userId",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User wallet profiles keyed by Firebase Auth UID."
+    },
+    "/users/{userId}/transactions/{txId}": {
+      "schema": { "$ref": "#/entities/CoinTransaction" },
+      "description": "Per-user coin wallet transaction history."
+    },
+    "/payment_orders/{orderId}": {
+      "schema": { "$ref": "#/entities/PaymentOrder" },
+      "description": "Coin purchase orders scoped to owner or Admin."
+    },
+    "/draws/{drawId}": {
+      "schema": { "$ref": "#/entities/DrawResult" },
+      "description": "Public immutable draw winner history."
+    },
+    "/app_state/{docId}": {
+      "schema": { "$ref": "#/entities/AppConfig" },
+      "description": "Singleton prize pool and house treasury configuration document (docId = config)."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminRole" },
+      "description": "Server-managed admin membership markers."
+    }
+  }
+}
